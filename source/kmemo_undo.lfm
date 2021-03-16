@@ -89,4 +89,13 @@ object FormKMemoUndo: TFormKMemoUndo
     OnClick = ButtonRedoClick
     TabOrder = 4
   end
+  object ButtonReport: TButton
+    Left = 552
+    Height = 25
+    Top = 261
+    Width = 75
+    Caption = 'Report'
+    OnClick = ButtonReportClick
+    TabOrder = 5
+  end
 end
