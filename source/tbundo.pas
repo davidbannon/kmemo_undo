@@ -1,5 +1,20 @@
 unit tbundo;
 
+{    Copyright (C) 2021 David Bannon
+    License:
+    This code is licensed under BSD 3-Clause Clear License, see file License.txt
+    or https://spdx.org/licenses/BSD-3-Clause-Clear.html
+    ------------------
+
+    A FPC/Lazarus Unit to providing a Text Only undo/redo facility to KMemo.
+
+    Intended for use in Tomboy, it may well be useful in other Lazarus applications
+    that use KMemo, a component of KControls.
+
+    See also
+    tomboy-ng - https://github.com/tomboy-notes/tomboy-ng
+    KControls - https://github.com/kryslt/KControls
+}
 
 { A unit to provide storage for undo / redo of the text in the tb-ng kmemo.
 
