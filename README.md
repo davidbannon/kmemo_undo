@@ -2,6 +2,7 @@ KMemo-Undo
 ===========
 
 
+***Warning - this code is seriously untested !***
 
 This is a small FPC/lazarus project that demonstrates a simple undo/redo for KMemo.  Its made specificially for my tomboy-ng application but just might be useful for other applications that use KMemo.
 
