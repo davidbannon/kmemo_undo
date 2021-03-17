@@ -183,7 +183,7 @@ end;
 
 procedure TFormKMemoUndo.KMemo1KeyPress(Sender: TObject; var Key: char);
 begin
-    Undoer.AddKeyPress(Kmemo1.blocks.RealSelStart, Key);
+    Undoer.AddKeyPress(Key);
 end;
 
 procedure TFormKMemoUndo.KMemo1KeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);

@@ -36,7 +36,12 @@ unit tbundo;
 
   Actions
 
-    AddChange   Stores data at location pointed to by NextChange, inc NextChange
+    RecordInitial Captures the relevent kmemo content before any changes are made.
+                Stored in a pair of 'regional' variables that get overwritten all
+                the time. Not every write to the vars results in a write to the
+                data structure (some efficency to be gained here ...).
+
+    Add*        Stores data at location pointed to by NextChange, inc NextChange
                 and AvailChanges (observing respective Max).
                 If AvailRedos is not zero, zero it, end of a undo session.
 
@@ -50,12 +55,12 @@ unit tbundo;
                 NextChange.
 
     Refinement ?
-                If, in AddChange, we are just adding a single char and its prev
+                If, in AddKeyPress, we are just adding a single char and its prev
                 StartSelIndex is only one less than this one, can we add that
                 char to previous NewData ?  No, cannot tell after the first one.
                 Maybe add a flag saying this is a single char at a time entry
                 and count the char in there already ????
-                ToDo : read above.
+                ToDo : read above.....
 
     In the Unit using KMemo :
         We must intercept every key press, cut and paste, delete, backspace key.
@@ -78,7 +83,7 @@ unit tbundo;
 
 
         If the app has a menu that offers Undo/Redo, might be best to enable/disable
-        then when user activates the menu, not on each keypress.
+        them when user activates the menu, not on each keypress.
 
 }
 
@@ -161,7 +166,7 @@ TUndo_Redo = class
 
                                         // Public : Called from KMemo1 onKeyPress event, assumes privare var,
                                         // Overwritten has been initialised with anything being overwritten.
-        procedure AddKeyPress(SelStart : integer; Key : char);
+        procedure AddKeyPress(Key: char);
                                         // Public : Called from KMemo1 onKeyUp event, handles
                                         // only delete and backspace keys.
         procedure AddKeyUp(Key: Word; Shift: TShiftState);
@@ -172,8 +177,10 @@ TUndo_Redo = class
         function CanUnDo() : boolean;
         function CanRedo() : boolean;
                                         // Public : Does Undo, rets True if another Undo is possible
+                                        // Always safe to call, may do nothing.
         function UnDo : boolean;
                                         // Public : Does Redo, rets True if another Redo is possible
+                                        // Always safe to call, may do nothing.
         function ReDo : boolean;
                                         // Public : For debug purposes only, don't leave for release.
         procedure Report();
@@ -277,9 +284,10 @@ begin
     AddChange(CR);
 end;
 
-procedure TUndo_Redo.AddKeyPress(SelStart: integer; Key: char);
+procedure TUndo_Redo.AddKeyPress(Key: char);
 begin
-    AddChange(SelStart-1, OverwrittenLen, 1, Overwritten, Key{, cmNone});         // -1 `cos its already happened
+    AddChange(TheKMemo.CaretPos-1, OverwrittenLen, 1, Overwritten, Key{, cmNone});         // -1 `cos its already happened
+    // AddChange(SelStart-1, OverwrittenLen, 1, Overwritten, Key{, cmNone});         // -1 `cos its already happened
 end;
 
 
