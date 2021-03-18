@@ -1,9 +1,20 @@
 unit tbundo;
 
-{    Copyright (C) 2021 David Bannon
+{   This unit is released under two Licenses, the first for general use -
+
+    Copyright (C) 2021 David Bannon
     License:
     This code is licensed under BSD 3-Clause Clear License, see file License.txt
     or https://spdx.org/licenses/BSD-3-Clause-Clear.html
+    ------------------
+
+    The Second License grants the origional author of KControls, know as TK,
+    free and completely unrestrained use of this code. TK may assign this right
+    to others at his option.
+
+    TK may remove all license and copyright information from this unit and
+    replace it with the standard license information normally applied to KControls.
+
     ------------------
 
     A FPC/Lazarus Unit to providing a Text Only undo/redo facility to KMemo.
