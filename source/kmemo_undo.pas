@@ -16,6 +16,8 @@ unit Kmemo_undo;
     tomboy-ng - https://github.com/tomboy-notes/tomboy-ng
     KControls - https://github.com/kryslt/KControls
 
+    NOTE : Debug feature MUST be turned on in tbundo for this project, otherwise compile errors !
+
 }
 
 {$mode objfpc}{$H+}
@@ -48,6 +50,7 @@ type
         ButtonUndo: TButton;
         ButtonRedo: TButton;
         KMemo1: TKMemo;
+        Memo1: TMemo;
         procedure ButtonBoldClick(Sender: TObject);
         procedure ButtonItalicsClick(Sender: TObject);
         procedure ButtonRedoClick(Sender: TObject);
@@ -61,7 +64,7 @@ type
 
     private
         procedure AlterBlockFont(const FirstBlockNo, BlockNo: longint;
-            const Command: TChangeMarkUp; const NewFontSize: integer=0);
+                                       const Command: TChangeMarkUp);
         procedure AlterFont(const Command: TChangeMarkUp);
 
     public
@@ -111,13 +114,13 @@ begin
     if IntIndex <> (length(Kmemo1.Blocks.Items[LastBlockNo].Text) -1) then 	// Not Last char in block
         LastBlockNo := KMemo1.SplitAt(LastChar) -1;       // we want whats before the split.
     while LastBlockNo > FirstBlockNo do begin
-        AlterBlockFont(FirstBlockNo, LastBlockNo, Command, 0);           // !!!!!!!!!!!!! '0' ?
+        AlterBlockFont(FirstBlockNo, LastBlockNo, Command);
         dec(LastBlockNo);
     end;
     // Now, only First Block to deal with
     if SplitStart then
 		FirstBlockNo := KMemo1.SplitAt(FirstChar);
-    AlterBlockFont(FirstBlockNo, FirstBlockNo, Command, 0);           // !!!!!!!!!!!!! '0' ?
+    AlterBlockFont(FirstBlockNo, FirstBlockNo, Command);
     KMemo1.SelEnd := LastChar;	// Any splitting above seems to subtly alter SelEnd, reset.
     KMemo1.SelStart := FirstChar;
     Undoer.AddMarkup({Command});
@@ -125,7 +128,7 @@ end;
 
 
 	{  Takes a Block number and applies changes to that block }
-procedure TFormKMemoUndo.AlterBlockFont(const FirstBlockNo, BlockNo : longint; const Command : TChangeMarkUp; const NewFontSize : integer = 0);
+procedure TFormKMemoUndo.AlterBlockFont(const FirstBlockNo, BlockNo : longint; const Command : TChangeMarkUp);
 var
 	Block, FirstBlock : TKMemoTextBlock;
 begin
@@ -159,7 +162,6 @@ end;
 procedure TFormKMemoUndo.FormCreate(Sender: TObject);
 begin
     Undoer := TUndo_Redo.create(Kmemo1);
-    //Undoer.AlterFontProcedure := @AlterFont;         // Required to allow Undoer to use local AlterFont()
     ButtonRedo.Enabled := Undoer.CanReDo;
     ButtonUndo.enabled := Undoer.CanUnDo;
 end;
@@ -169,16 +171,17 @@ begin
     undoer.free;
 end;
 
-procedure TFormKMemoUndo.KMemo1KeyDown(Sender: TObject; var Key: Word;
-    Shift: TShiftState);
+procedure TFormKMemoUndo.KMemo1KeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
     Undoer.RecordInitial(Key);
-    if (ssCtrl in Shift) then
+    if {$ifdef Darwin}[ssMeta] = Shift {$else}[ssCtrl] = Shift{$endif} then
         case key of
             VK_V : Undoer.AddPasteOrCut();         // Paste
             VK_X : Undoer.AddPasteOrCut(True);     // Cut
+            // Now let them go through to the keeper
+            VK_Z : begin Undoer.UnDo; Key := 0; end;  // but here we drop it on floor.
+            VK_Y : begin Undoer.Redo; Key := 0; end;
         end;
-     // Now let them go through to the keeper
 end;
 
 procedure TFormKMemoUndo.KMemo1KeyPress(Sender: TObject; var Key: char);

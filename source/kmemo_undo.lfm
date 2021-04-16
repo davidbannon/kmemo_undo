@@ -1,10 +1,10 @@
 object FormKMemoUndo: TFormKMemoUndo
-  Left = 553
-  Height = 422
-  Top = 262
+  Left = 884
+  Height = 519
+  Top = 272
   Width = 634
   Caption = 'FormKMemoUndo'
-  ClientHeight = 422
+  ClientHeight = 519
   ClientWidth = 634
   OnCreate = FormCreate
   OnDestroy = FormDestroy
@@ -97,5 +97,25 @@ object FormKMemoUndo: TFormKMemoUndo
     Caption = 'Report'
     OnClick = ButtonReportClick
     TabOrder = 5
+  end
+  object Memo1: TMemo
+    AnchorSideLeft.Control = Owner
+    AnchorSideTop.Control = ButtonBold
+    AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
+    AnchorSideBottom.Control = Owner
+    AnchorSideBottom.Side = asrBottom
+    Left = 0
+    Height = 213
+    Top = 306
+    Width = 634
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    BorderSpacing.Top = 20
+    Lines.Strings = (
+      'Memo1'
+    )
+    ScrollBars = ssVertical
+    TabOrder = 6
   end
 end

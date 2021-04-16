@@ -18,6 +18,7 @@
     </BuildModes>
     <PublishOptions>
       <Version Value="2"/>
+      <DestinationDirectory Value="$(ProjPath)/published/"/>
       <UseFileFilters Value="True"/>
     </PublishOptions>
     <RunParams>
