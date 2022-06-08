@@ -14,6 +14,8 @@ unit tbundo;
     See also
     tomboy-ng - https://github.com/tomboy-notes/tomboy-ng
     KControls - https://github.com/kryslt/KControls
+
+    History : 2021-12-18  AddTextInsert is sometimes required to save any selected text.
 }
 
 { A unit to provide storage for undo / redo of the text in the tb-ng kmemo.
@@ -89,8 +91,9 @@ unit tbundo;
 
 {$mode ObjFPC}{$H+}
 
-
-{$DEFINE DEBUG_UNDO}    // Warning, debug uses writeln, don't use on Windows !
+{$ifndef WINDOWS}
+{x$DEFINE DEBUG_UNDO}    // Warning, debug uses writeln, don't use on Windows !
+{$endif}
 
 interface
 
@@ -107,7 +110,7 @@ type TChangeRec = record
     NewData   : string;             // The content that was initially added.
 end;
 
-const  MaxChange = 10;               // ToDo : set this to, eg, 100, when tested OK
+const  MaxChange = 25;               // ToDo : set this to, eg, 100, when tested OK
 
 type
     TChangeStructure = array[0..MaxChange-1] of TChangeRec;
@@ -165,7 +168,9 @@ TUndo_Redo = class
                                         // Public: Called when a primary paste (ie middle mouse, three
                                         // finger tap on Linux or Windows) or some other 'insert' happens.
                                         // We should have already checked that buffer contains some text.
-        procedure AddTextInsert(const SelIndex : integer; const Content : string);
+                                        // If GrabExisting then we capture any currently selected text to
+                                        // be restored later if necessary.
+        procedure AddTextInsert(const SelIndex: integer; const Content: string; GrabExisting: boolean = false);
 
         function CanUnDo() : boolean;
         function CanRedo() : boolean;
@@ -248,6 +253,7 @@ function TUndo_Redo.GetSelectedRTF() : string;
 var
     AStream : TMemoryStream;
 begin
+    result := '';
     if TheKMemo.Blocks.RealSelLength > 0 then begin
         AStream := TMemoryStream.Create;
         try
@@ -278,10 +284,16 @@ begin
     AddChange(CR);
 end;
 
-procedure TUndo_Redo.AddTextInsert(const SelIndex: integer; const Content: string);
+procedure TUndo_Redo.AddTextInsert(const SelIndex: integer; const Content: string; GrabExisting : boolean = false);
 // ToDo : Inconsistent, other public methods find their own data ....
+var
+  Buff : string;
 begin
-    AddChange(SelIndex, 0, Content.Length, '', Content);
+    if GrabExisting then begin
+        Buff := GetSelectedRTF();
+        AddChange(SelIndex, Buff.Length, Content.Length, Buff, Content);
+    end else
+        AddChange(SelIndex, 0, Content.Length, '', Content);
 end;
 
 procedure TUndo_Redo.AddKeyPress(Key: char);
@@ -309,7 +321,7 @@ function TUndo_Redo.CanUnDo(): boolean;
 begin
     Result := (AvailChanges > 0);
     {$IFDEF DEBUG_UNDO}
-    writeln('Can Undo ' + booltostr(result, True));
+    writeln('Can Undo ' + booltostr(result, True));   // only ifdef DEBUG_UNDO
     {$endif}
 end;
 
@@ -317,7 +329,7 @@ function TUndo_Redo.CanRedo(): boolean;
 begin
     Result :=  (AvailReDos > 0);
     {$IFDEF DEBUG_UNDO}
-    writeln('Can Redo ' + booltostr(result, True));
+    writeln('Can Redo ' + booltostr(result, True));   // only ifdef DEBUG_UNDO
     {$endif}
 end;
 
@@ -340,7 +352,7 @@ procedure TUndo_Redo.AddChange(const SelStart, ELen, NLen : integer; const Exist
 begin
 
     {$IFDEF DEBUG_UNDO}
-    writeln('AddChange at ' + inttostr(SelStart)
+    writeln('AddChange at ' + inttostr(SelStart)             // only ifdef DEBUG_UNDO
         + ' replace [' + ExistData
         + '] (' + inttostr(ELen) + ') with [' + NewData + '] (' + inttostr(NLen) + ')');
     {$ENDIF}
@@ -399,7 +411,7 @@ begin
     result := (AvailChanges > 0);                    // can we call UnDo again ?
     with CurrentCR do begin
         {$IFDEF DEBUG_UNDO}
-        writeln('Undo at ' + inttostr(StartSelIndex) + ' replace ['
+        writeln('Undo at ' + inttostr(StartSelIndex) + ' replace ['    // only ifdef DEBUG_UNDO
                     + NewData + '] with [' + ExistData + ']');
         {$ENDIF}
         Thekmemo.Blocks.LockUpdate;
@@ -433,7 +445,7 @@ begin
     result := (AvailReDos > 0);             // can we call ReDo again ?
     with CurrentCR do begin
         {$IFDEF DEBUG_UNDO}
-        writeln('Redo at ' + inttostr(StartSelIndex) + ' replace [' + ExistData + '] with [' + NewData + ']');
+        writeln('Redo at ' + inttostr(StartSelIndex) + ' replace [' + ExistData + '] with [' + NewData + ']');   // only ifdef DEBUG_UNDO
         {$ENDIF}
         try
             Thekmemo.Blocks.LockUpdate;
@@ -479,19 +491,19 @@ var
 begin
     //exit;
     writeln('---------- Undo Report ---------');
-    writeln('NextChange=' + inttostr(NextChange)
+    writeln('NextChange=' + inttostr(NextChange)              // only ifdef DEBUG_UNDO
         + '  AvailChanges=' + inttostr(AvailChanges)
         + '  AvailReDos=' + inttostr(AvailReDos));
-    for I := 0 to MaxChange -1 do                          // ToDo : this is unnecessary, remove after testing
+    for I := 0 to MaxChange -1 do                          // this is unnecessary, remove after testing
         if ChangeStructure[i].StartSelIndex >= 0 then  begin
             writeln('Slot:' + inttostr(I) + ' Index:'
                 + inttostr(ChangeStructure[i].StartSelIndex)
                 + ' [' + ChangeStructure[i].ExistData + '] - ['
                 + ChangeStructure[i].NewData + ']'{ + 'MarkUp=' + MarkUpSt});
         end;
-    writeln('Current : ' + inttostr(CurrentCR.StartSelIndex) + ' [' + CurrentCR.ExistData + '] - [' + CurrentCR.NewData + ']');
-    //writeln('Content [' + TheKMemo.Text + ']');
-    writeln('--------------------------------');
+    writeln('Current : ' + inttostr(CurrentCR.StartSelIndex) + ' [' + CurrentCR.ExistData   // only ifdef DEBUG_UNDO
+            + '] - [' + CurrentCR.NewData + ']');
+    writeln('--------------------------------');                // only ifdef DEBUG_UNDO
 end;
 {$endif}
 

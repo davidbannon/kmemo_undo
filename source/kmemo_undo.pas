@@ -204,7 +204,9 @@ end;
 
 procedure TFormKMemoUndo.ButtonReportClick(Sender: TObject);
 begin
-    Undoer.report;
+    {$ifndef WINDOWS}
+    //Undoer.report;           // uses writeln, messes with windows
+    {$endif}
 end;
 
 procedure TFormKMemoUndo.ButtonUndoClick(Sender: TObject);
